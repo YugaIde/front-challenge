@@ -12,7 +12,7 @@ export function useAuthContext() {
 // 認証情報のコンテキストプロバイダーコンポーネント
 export function AuthProvider({ children }) {
   // ユーザーの認証情報を管理するためのステート変数とセッター関数を定義
-  const [user, setUser] = useState('');
+  const [user, setUser] = useState(null);
 
   // コンテキストに提供する値を定義
   const value = {

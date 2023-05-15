@@ -11,7 +11,8 @@ const SignUp = () => {
 
   return (
     <div>
-      <h1>ユーザ登録 {user.email}</h1>
+      {/* ↓user.emailはエラーになる */}
+      {/* <h1>ユーザ登録 {user.email}</h1> */}
       <form onSubmit={handleSubmit}>
         <div>
           <label>メールアドレス</label>
