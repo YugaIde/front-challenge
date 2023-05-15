@@ -1,19 +1,25 @@
 import { auth } from '../firebase';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Outlet, Navigate } from 'react-router-dom';
+import { useAuthContext } from '../context/AuthContext';
 
 const Home = () => {
   const navigate = useNavigate();
+  const { user } = useAuthContext();
 
   const handleLogout = () => {
-    //Firebaseの認証機能を使用してユーザーをログアウトさせるためのメソッド
     auth.signOut();
-    navigate('/login');
+    navigate('/glogin');
   };
+
+  if (!user) {
+    return <Navigate to="/glogin" replace />;
+  }
 
   return (
     <div>
       <h1>ホームページ</h1>
       <button onClick={handleLogout}>ログアウト</button>
+      {/* <Outlet /> */}
     </div>
   );
 };
