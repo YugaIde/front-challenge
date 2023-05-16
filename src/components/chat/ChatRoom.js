@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { collection, query, orderBy, onSnapshot, addDoc } from 'firebase/firestore';
-import db from '../../firebase';
+import {db} from '../../firebase';
 
 function ChatRoom() {
   const [messages, setMessages] = useState([]);

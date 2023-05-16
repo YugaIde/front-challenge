@@ -24,7 +24,7 @@ function Header() {
             <Link to="/chat/chat_room">chat</Link>
           </li>
           <li>
-            <Link to="/profile">profile</Link>
+            <Link to="/profile/profile_show">profile</Link>
           </li>
           <li>
             <Link to="/contact">contact</Link>
