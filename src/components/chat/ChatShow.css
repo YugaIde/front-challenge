@@ -7,3 +7,25 @@
      font-weight: bold;
      color: #fff;
 }
+
+.sent {
+    /* display: flex; */
+  text-align: left;
+}
+
+.received {
+    /* display: flex; */
+    text-align: right;
+}
+
+.other-user-message .username {
+  text-align: left;
+}
+
+.current-user-photo {
+    float: right;
+}
+
+.other-user-photo {
+    float: left;
+}

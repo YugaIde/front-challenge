@@ -75,17 +75,22 @@ function ChatShow() {
   return (
     <div>
       <h1>Chat Room</h1>
-      <div>
+      <div class="container">
         {messages.map((message) => {
           const userProfile = userProfiles[message.uid];
+          const messageClassName =
+            user.uid === message.uid ? "sent" : "received";
+          console.log(messageClassName);
           return (
-            <div key={message.id}>
+            <div key={message.id} className={messageClassName}>
               {userProfile ? (
                 <>
-                  <Suspense fallback={<div>Loading Avatar...</div>}>
-                    <Avatar src={userProfile.avatarURL} alt="Avatar" />
-                  </Suspense>
-                  <p className="username">{userProfile.username}</p>
+                  <div>
+                    <Suspense fallback={<div>Loading Avatar...</div>}>
+                      <Avatar src={userProfile.avatarURL} alt="Avatar" />
+                    </Suspense>
+                    <p className="username">{userProfile.username}</p>
+                  </div>
                   <p className="message">{message.message}</p>
                 </>
               ) : (
@@ -117,9 +122,7 @@ const Avatar = ({ src, alt }) => {
     }
   }, [deferredSrc]);
 
-  return (
-    <img ref={imageRef} src={src} alt={alt} width="200" height="auto" />
-  );
+  return <img ref={imageRef} src={src} alt={alt} width="200" height="auto" />;
 };
 
 export default ChatShow;
