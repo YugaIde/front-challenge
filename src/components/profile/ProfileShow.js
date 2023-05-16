@@ -1,37 +1,37 @@
 import { useState, useEffect, useRef, Suspense, useDeferredValue } from "react";
-import { Navigate } from "react-router-dom";
-import { doc, getDoc, setDoc } from "firebase/firestore";
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { collection, doc, getDoc, setDoc } from "firebase/firestore";
+import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage"; // Update import statement
 import { db, storage } from "../../firebase";
-import { useAuthContext } from "../../context/AuthContext";
+import { useAuthContext } from '../../context/AuthContext';
 import "./ProfileShow.css";
 
 function ProfileShow() {
-  // プロフィール情報を管理するためのステート変数とセッター関数を定義
-  const [avatarURL, setAvatarURL] = useState(""); // アバター画像のURLを管理
-  const [username, setUsername] = useState(""); // ユーザー名の状態を管理
-  const [gender, setGender] = useState(""); // 性別の状態を管理
-  const [age, setAge] = useState(""); // 年齢の状態を管理
-  const [editing, setEditing] = useState(false); // 編集モードの状態を管理
-  const [editedAvatar, setEditedAvatar] = useState(null); // 編集されたアバター画像の状態を管理
-  const [editedUsername, setEditedUsername] = useState(""); // 編集されたユーザー名の状態を管理
-  const [editedGender, setEditedGender] = useState(""); // 編集されたユーザー名の状態を管理
-  const [editedAge, setEditedAge] = useState(""); // 編集されたユーザー名の状態を管理
+  const { user } = useAuthContext();
+
+  const [avatarURL, setAvatarURL] = useState("");
+  const [username, setUsername] = useState("");
+  const [gender, setGender] = useState("");
+  const [age, setAge] = useState("");
+  const [editing, setEditing] = useState(false);
+  const [editedAvatar, setEditedAvatar] = useState(null);
+  const [editedUsername, setEditedUsername] = useState("");
+  const [editedGender, setEditedGender] = useState("");
+  const [editedAge, setEditedAge] = useState("");
 
   useEffect(() => {
-    loadProfile(); // プロフィール情報を読み込む
+    loadProfile();
   }, []);
 
   const loadProfile = async () => {
     try {
-      const profileDoc = await getDoc(doc(db, "profiles", "user1")); // 'profiles'コレクション内の'user1'ドキュメントを取得
+      const profileDoc = await getDoc(doc(db, "profiles", user.uid));
 
       if (profileDoc.exists()) {
-        const data = profileDoc.data(); // ドキュメントのデータを取得
-        setAvatarURL(data.avatarURL); // アバター画像のURLを設定
-        setUsername(data.username); // ユーザー名を設定
-        setGender(data.gender); // 追加: 性別を設定
-        setAge(data.age); // 追加: 年齢を設定
+        const data = profileDoc.data();
+        setAvatarURL(data.avatarURL);
+        setUsername(data.username);
+        setGender(data.gender);
+        setAge(data.age);
       }
     } catch (error) {
       console.error("Error loading profile:", error);
@@ -40,33 +40,54 @@ function ProfileShow() {
 
   const handleAvatarChange = (e) => {
     const file = e.target.files[0];
-    setEditedAvatar(file); // 編集されたアバター画像を設定
+    setEditedAvatar(file);
   };
 
-  // プロフィール情報を保存する関数。保存ボタンをクリックした時に実行される
   const handleProfileSubmit = async (e) => {
     e.preventDefault();
 
     try {
       if (editedAvatar) {
-        const storageRef = ref(storage, `avatars/${editedAvatar.name}`); // アバター画像を保存する参照を作成
-        await uploadBytes(storageRef, editedAvatar); // アバター画像をストレージにアップロード
-        const downloadURL = await getDownloadURL(storageRef); // アップロード後のダウンロードURLを取得
-        setAvatarURL(downloadURL); // アバター画像のURLを設定
+        const storageRef = ref(storage, `avatars/${editedAvatar.name}`);
+        const uploadTask = uploadBytesResumable(storageRef, editedAvatar); // Use uploadBytesResumable instead of uploadBytes
+        uploadTask.on(
+          "state_changed",
+          (snapshot) => {
+            // Progress monitoring if needed
+          },
+          (error) => {
+            console.error("Error uploading avatar:", error);
+          },
+          () => {
+            // Upload completed successfully
+            getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
+              setAvatarURL(downloadURL);
+              saveProfile();
+            });
+          }
+        );
+      } else {
+        saveProfile();
       }
+    } catch (error) {
+      console.error("Error saving profile:", error);
+    }
+  };
 
-      await setDoc(doc(db, "profiles", "user1"), {
-        avatarURL: avatarURL, // アバター画像のURLを保存
-        username: editedUsername, // 編集されたユーザー名を保存
-        gender: editedGender, // 編集された性別を保存
-        age: editedAge, // 編集された年齢を保存
+  const saveProfile = async () => {
+    try {
+      await setDoc(doc(db, "profiles", user.uid), {
+        avatarURL: avatarURL,
+        username: editedUsername,
+        gender: editedGender,
+        age: editedAge,
       });
 
-      setEditing(false); // 編集モードを終了
-      setEditedAvatar(null); // 編集されたアバター画像を初期化
-      setEditedUsername(""); // 編集されたユーザー名を初期化
-      setEditedGender(""); // 編集された性別を初期化
-      setEditedAge(""); // 編集された年齢を初期化
+      setEditing(false);
+      setEditedAvatar(null);
+      setEditedUsername("");
+      setEditedGender("");
+      setEditedAge("");
 
       console.log("Profile saved successfully!");
     } catch (error) {
@@ -74,85 +95,67 @@ function ProfileShow() {
     }
   };
 
-  const { user } = useAuthContext();
-  if (!user) {
-    return <Navigate to="/glogin" replace />;
-  }
-
   return (
-    <div class="content">
+    <div className="content">
       <Suspense fallback={<div>Loading Avatar...</div>}>
-        {" "}
-        {/* Avatarコンポーネントの遅延読み込み */}
-        <Avatar src={avatarURL} alt="Avatar" />{" "}
-        {/* Avatarコンポーネントの描画 */}
+        <Avatar src={avatarURL} alt="Avatar" />
       </Suspense>
-      <p>name: {username}</p> {/* ユーザー名の表示 */}
-      <p>Gender: {gender}</p> {/* 追加: 性別を表示 */}
-      <p>Age: {age}</p> {/* 追加: 年齢を表示 */}
-      {/* 編集モードじゃない場合は、プロフィール編集ボタンを表示 */}
+      <p>name: {username}</p>
+      <p>Gender: {gender}</p>
+      <p>Age: {age}</p>
       {!editing && (
         <button onClick={() => setEditing(true)}>
           Edit Profile
-        </button> /* プロフィール編集ボタン */
+          </button>
       )}
-      {/* 編集モードの場合はプロフィール編集フォームを表示 */}
       {editing && (
         <form onSubmit={handleProfileSubmit}>
-          {/*  アバター画像の選択フィールド */}
-          <input type="file" onChange={handleAvatarChange} />{" "}
-          {/* 名前の入力フィールド */}
-          <label for="username">name</label>
+          <input type="file" onChange={handleAvatarChange} />
+          <label htmlFor="username">name</label>
           <input
             type="text"
             id="username"
             value={editedUsername}
-            onChange={(e) => setEditedUsername(e.target.value)} // ユーザー名の入力フィールド
+            onChange={(e) => setEditedUsername(e.target.value)}
           />
-          {/* 性別の入力フィールド */}
-          <label for="gender">gender</label>
+          <label htmlFor="gender">gender</label>
           <select
             id="gender"
-            value={editedGender} // 現在の性別を表示
-            onChange={(e) => setEditedGender(e.target.value)} // 性別の選択が変更された時の処理
+            value={editedGender}
+            onChange={(e) => setEditedGender(e.target.value)}
           >
-            <option value="male">Male</option> {/* 男性 */}
-            <option value="female">Female</option> {/* 女性 */}
-            <option value="other">Other</option> {/* その他 */}
+            <option value="male">Male</option>
+            <option value="female">Female</option>
+            <option value="other">Other</option>
           </select>
-          {/* 年齢の入力フィールド  */}
-          <label for="age">age</label>
+          <label htmlFor="age">age</label>
           <input
             type="text"
             id="age"
-            value={editedAge} // 追加: 現在の年齢を表示
-            onChange={(e) => setEditedAge(e.target.value)} // 追加: 年齢の入力フィールド
+            value={editedAge}
+            onChange={(e) => setEditedAge(e.target.value)}
           />
-          <button type="submit">Save</button> {/* 保存ボタン */}
-          <button onClick={() => setEditing(false)}>Cancel</button>{" "}
-          {/* キャンセルボタン */}
+          <button type="submit">Save</button>
+          <button onClick={() => setEditing(false)}>Cancel</button>
         </form>
       )}
     </div>
   );
 }
 
-// Avatarコンポーネントの定義
 const Avatar = ({ src, alt }) => {
-  const imageRef = useRef(null); // 画像の参照を作成
-  const deferredSrc = useDeferredValue(src, { timeoutMs: 2000 }); // srcの値を遅延させる
+  const imageRef = useRef(null);
+  const deferredSrc = useDeferredValue(src, { timeoutMs: 2000 });
 
   useEffect(() => {
-    console.log(imageRef.current);
     if (imageRef.current) {
-      // 画像の参照が存在したら
-      imageRef.current.src = deferredSrc; // 画像のsrc属性を設定
+      imageRef.current.src = deferredSrc;
     }
-  }, [deferredSrc, src]);
+  }, [deferredSrc]);
 
   return (
-    <img ref={imageRef} src={src} alt={alt} width={"200"} height={"auto"} />
-  ); // 画像の表示
+    <img ref={imageRef} src={src} alt={alt} width="200" height="auto" />
+  );
 };
 
 export default ProfileShow;
