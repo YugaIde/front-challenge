@@ -10,7 +10,7 @@ app.use(cors()); // CORSミドルウェアを追加
 
 app.post('/api/sendMessage', async (req, res) => {
   try {
-const webhookUrl = 'https://hooks.slack.com/services/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'; // Incoming WebhooksのURLに置き換えてください
+const webhookUrl = 'https://hooks.slack.com/services/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'; // Incoming WebhooksのURLに置き換えてください
 
     const payload = {
     //   channel: 'C057V81UEAZ', // メッセージを送信したいチャンネルのIDまたは名前を指定

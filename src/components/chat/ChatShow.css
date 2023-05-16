@@ -1,0 +1,9 @@
+.message {
+     position: relative;
+     display: inline-block;
+     background: #ff9158;
+     border-radius: 30px;
+     padding: 16px;
+     font-weight: bold;
+     color: #fff;
+}
