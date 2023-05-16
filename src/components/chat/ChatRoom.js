@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
+import { Navigate } from 'react-router-dom';
 import { collection, query, orderBy, onSnapshot, addDoc } from 'firebase/firestore';
+import { useAuthContext } from '../../context/AuthContext';
 import {db} from '../../firebase';
 
 function ChatRoom() {
@@ -35,6 +37,11 @@ function ChatRoom() {
       console.error('Error sending message:', error);
     }
   };
+
+  const { user } = useAuthContext();
+  if (!user) {
+    return <Navigate to="/glogin" replace />;
+  }
 
   return (
     <div>

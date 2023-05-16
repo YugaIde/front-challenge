@@ -10,16 +10,16 @@ function Header() {
 
     const handleLogout = () => {
         auth.signOut();
-        navigate('/login');
+        navigate('/glogin');
       };
 
   return (
     <nav className="header">
       <ul className="nav-menu">
-        <li class="left">
+        <li className="left">
           <Link to="/">front chat app</Link>
         </li>
-        <div class="right">
+        <div className="right">
           <li>
             <Link to="/chat/chat_room">chat</Link>
           </li>
@@ -27,7 +27,7 @@ function Header() {
             <Link to="/profile/profile_show">profile</Link>
           </li>
           <li>
-            <Link to="/contact">contact</Link>
+            <Link to="/contact/contact_show">contact</Link>
           </li>
           <li>
           <button onClick={handleLogout}>ログアウト</button>

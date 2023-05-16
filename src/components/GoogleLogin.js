@@ -1,6 +1,7 @@
 import { useNavigate, Navigate } from 'react-router-dom';
 import { useState } from 'react';
 import { auth, provider, signInWithPopup } from '../firebase';
+
 import { useAuthContext } from '../context/AuthContext';
 import logo from '../logo.svg';
 import './GoogleLogin.css';

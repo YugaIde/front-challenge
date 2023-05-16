@@ -1,7 +1,9 @@
 import { useState, useEffect, useRef, Suspense, useDeferredValue } from "react";
+import { Navigate } from "react-router-dom";
 import { collection, doc, getDoc, setDoc } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { db, storage } from "../../firebase";
+import { useAuthContext } from "../../context/AuthContext";
 import "./ProfileShow.css";
 
 function ProfileShow() {
@@ -71,6 +73,11 @@ function ProfileShow() {
       console.error("Error saving profile:", error);
     }
   };
+
+  const { user } = useAuthContext();
+  if (!user) {
+    return <Navigate to="/glogin" replace />;
+  }
 
   return (
     <div class="content">
