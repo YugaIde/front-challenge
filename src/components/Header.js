@@ -21,7 +21,7 @@ function Header() {
         </li>
         <div className="right">
           <li>
-            <Link to="/chat/chat_room">chat</Link>
+            <Link to="/chat/chat_show">chat</Link>
           </li>
           <li>
             <Link to="/profile/profile_show">profile</Link>

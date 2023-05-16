@@ -3,7 +3,7 @@ import Home from "./components/Home";
 import SignUp from "./components/SignUp";
 import Login from "./components/Login";
 import GoogleLogin from "./components/GoogleLogin";
-import ChatRoom from "./components/chat/ChatRoom";
+import ChatShow from "./components/chat/ChatShow";
 import ProfileShow from "./components/profile/ProfileShow";
 import ContactShow from "./components/contact/ContactShow";
 import { AuthProvider } from "./context/AuthContext";
@@ -22,7 +22,7 @@ function App() {
             <Route path="/signup" element={<SignUp />} />
             <Route path="/login" element={<Login />} />
             <Route path="/glogin" element={<GoogleLogin />} />
-            <Route path="/chat/chat_room" element={<ChatRoom />} />
+            <Route path="/chat/chat_show" element={<ChatShow />} />
             <Route path="/profile/profile_show" element={<ProfileShow />} />
             <Route path="/contact/contact_show" element={<ContactShow />} />
             <Route path="*" element={<Error404 />} />

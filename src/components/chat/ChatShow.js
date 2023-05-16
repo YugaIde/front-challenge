@@ -4,7 +4,7 @@ import { collection, query, orderBy, onSnapshot, addDoc } from 'firebase/firesto
 import { useAuthContext } from '../../context/AuthContext';
 import {db} from '../../firebase';
 
-function ChatRoom() {
+function ChatShow() {
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
 
@@ -65,4 +65,4 @@ function ChatRoom() {
   );
 }
 
-export default ChatRoom;
+export default ChatShow;

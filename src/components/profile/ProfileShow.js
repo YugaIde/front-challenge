@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, Suspense, useDeferredValue } from "react";
 import { Navigate } from "react-router-dom";
-import { collection, doc, getDoc, setDoc } from "firebase/firestore";
+import { doc, getDoc, setDoc } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { db, storage } from "../../firebase";
 import { useAuthContext } from "../../context/AuthContext";
