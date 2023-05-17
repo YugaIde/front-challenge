@@ -1,8 +1,10 @@
 import { useState, useEffect, useRef, Suspense, useDeferredValue } from "react";
 import { collection, doc, getDoc, setDoc } from "firebase/firestore";
-import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage"; // Update import statement
+import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
 import { db, storage } from "../../firebase";
-import { useAuthContext } from '../../context/AuthContext';
+import { useAuthContext } from "../../context/AuthContext";
+import { Snackbar } from "@mui/material";
+import { Alert } from "@mui/material";
 import "./ProfileShow.css";
 
 function ProfileShow() {
@@ -17,6 +19,9 @@ function ProfileShow() {
   const [editedUsername, setEditedUsername] = useState("");
   const [editedGender, setEditedGender] = useState("");
   const [editedAge, setEditedAge] = useState("");
+  const [openSnackbar, setOpenSnackbar] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState("");
+  const [snackbarSeverity, setSnackbarSeverity] = useState("success");
 
   useEffect(() => {
     loadProfile();
@@ -49,7 +54,7 @@ function ProfileShow() {
     try {
       if (editedAvatar) {
         const storageRef = ref(storage, `avatars/${editedAvatar.name}`);
-        const uploadTask = uploadBytesResumable(storageRef, editedAvatar); // Use uploadBytesResumable instead of uploadBytes
+        const uploadTask = uploadBytesResumable(storageRef, editedAvatar);
         uploadTask.on(
           "state_changed",
           (snapshot) => {
@@ -57,9 +62,11 @@ function ProfileShow() {
           },
           (error) => {
             console.error("Error uploading avatar:", error);
+            setSnackbarSeverity("error");
+            setSnackbarMessage("プロフィールを更新できませんでした");
+            setOpenSnackbar(true);
           },
           () => {
-            // Upload completed successfully
             getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
               setAvatarURL(downloadURL);
               saveProfile();
@@ -71,16 +78,26 @@ function ProfileShow() {
       }
     } catch (error) {
       console.error("Error saving profile:", error);
+      setSnackbarSeverity("error");
+      setSnackbarMessage("プロフィールを更新できませんでした");
+      setOpenSnackbar(true);
     }
   };
 
   const saveProfile = async () => {
     try {
+      if (isNaN(Number(editedAge))) {
+        setSnackbarSeverity("error");
+        setSnackbarMessage("年齢には数値を入力してください");
+        setOpenSnackbar(true);
+        return;
+      }
+
       await setDoc(doc(db, "profiles", user.uid), {
         avatarURL: avatarURL,
         username: editedUsername,
         gender: editedGender,
-        age: editedAge,
+        age: Number(editedAge),
       });
 
       setEditing(false);
@@ -89,10 +106,19 @@ function ProfileShow() {
       setEditedGender("");
       setEditedAge("");
 
-      console.log("Profile saved successfully!");
+      setSnackbarSeverity("success");
+      setSnackbarMessage("プロフィールを更新しました");
+      setOpenSnackbar(true);
     } catch (error) {
       console.error("Error saving profile:", error);
+      setSnackbarSeverity("error");
+      setSnackbarMessage("プロフィールを更新できませんでした");
+      setOpenSnackbar(true);
     }
+  };
+
+  const handleCloseSnackbar = () => {
+    setOpenSnackbar(false);
   };
 
   return (
@@ -104,9 +130,7 @@ function ProfileShow() {
       <p>Gender: {gender}</p>
       <p>Age: {age}</p>
       {!editing && (
-        <button onClick={() => setEditing(true)}>
-          Edit Profile
-          </button>
+        <button onClick={() => setEditing(true)}>Edit Profile</button>
       )}
       {editing && (
         <form onSubmit={handleProfileSubmit}>
@@ -139,6 +163,16 @@ function ProfileShow() {
           <button onClick={() => setEditing(false)}>Cancel</button>
         </form>
       )}
+
+      <Snackbar
+        open={openSnackbar}
+        autoHideDuration={4000}
+        onClose={handleCloseSnackbar}
+      >
+        <Alert onClose={handleCloseSnackbar} severity={snackbarSeverity}>
+          {snackbarMessage}
+        </Alert>
+      </Snackbar>
     </div>
   );
 }

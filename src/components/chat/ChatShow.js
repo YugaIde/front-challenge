@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useDeferredValue, Suspense } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Navigate } from "react-router-dom";
 import {
   collection,
@@ -7,20 +7,23 @@ import {
   onSnapshot,
   addDoc,
   getDocs,
-  doc,
 } from "firebase/firestore";
 import { useAuthContext } from "../../context/AuthContext";
 import { db } from "../../firebase";
+import Snackbar from "@mui/material/Snackbar";
+import MuiAlert from "@mui/material/Alert";
 import "./ChatShow.css";
 
 function ChatShow() {
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
   const [userProfiles, setUserProfiles] = useState({});
+  const [selectedUserProfile, setSelectedUserProfile] = useState(null);
+  const [openSnackbar, setOpenSnackbar] = useState(false);
   const { user } = useAuthContext();
 
   useEffect(() => {
-    loadProfiles(); // プロフィール情報をロードするために非同期関数を呼び出す
+    loadProfiles();
 
     const unsubscribe = onSnapshot(
       query(collection(db, "messages"), orderBy("timestamp")),
@@ -65,7 +68,21 @@ function ChatShow() {
       setNewMessage("");
     } catch (error) {
       console.error("Error sending message:", error);
+      setOpenSnackbar(true);
     }
+  };
+
+  const closeSnackbar = () => {
+    setOpenSnackbar(false);
+  };
+
+  const openUserProfileModal = (uid) => {
+    const userProfile = userProfiles[uid];
+    setSelectedUserProfile(userProfile);
+  };
+
+  const closeUserProfileModal = () => {
+    setSelectedUserProfile(null);
   };
 
   if (!user) {
@@ -75,20 +92,18 @@ function ChatShow() {
   return (
     <div>
       <h1>Chat Room</h1>
-      <div class="container">
+      <div className="container">
         {messages.map((message) => {
           const userProfile = userProfiles[message.uid];
           const messageClassName =
             user.uid === message.uid ? "sent" : "received";
-          console.log(messageClassName);
+
           return (
             <div key={message.id} className={messageClassName}>
               {userProfile ? (
                 <>
-                  <div>
-                    <Suspense fallback={<div>Loading Avatar...</div>}>
-                      <Avatar src={userProfile.avatarURL} alt="Avatar" />
-                    </Suspense>
+                  <div onClick={() => openUserProfileModal(message.uid)}>
+                    <Avatar src={userProfile.avatarURL} alt="Avatar" />
                     <p className="username">{userProfile.username}</p>
                   </div>
                   <p className="message">{message.message}</p>
@@ -108,19 +123,39 @@ function ChatShow() {
         />
         <button type="submit">Send</button>
       </form>
+      <Snackbar
+        open={openSnackbar}
+        autoHideDuration={4000}
+        onClose={closeSnackbar}
+      >
+        <MuiAlert onClose={closeSnackbar} severity="error">
+          メッセージの送信に失敗しました
+        </MuiAlert>
+      </Snackbar>
+
+      {selectedUserProfile && (
+        <div className="modal">
+          <div className="modal-content">
+            <h2>{selectedUserProfile.username}'s Profile</h2>
+            <p>Email: {selectedUserProfile.email}</p>
+            <p>Age: {selectedUserProfile.age}</p>
+            <p>Location: {selectedUserProfile.location}</p>
+            <button onClick={closeUserProfileModal}>Close</button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
 const Avatar = ({ src, alt }) => {
   const imageRef = useRef(null);
-  const deferredSrc = useDeferredValue(src, { timeoutMs: 2000 });
 
   useEffect(() => {
     if (imageRef.current) {
-      imageRef.current.src = deferredSrc;
+      imageRef.current.src = src;
     }
-  }, [deferredSrc]);
+  }, [src]);
 
   return <img ref={imageRef} src={src} alt={alt} width="200" height="auto" />;
 };
